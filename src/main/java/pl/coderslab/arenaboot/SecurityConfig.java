@@ -3,7 +3,10 @@ package pl.coderslab.arenaboot;
 
 import javax.sql.DataSource;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
@@ -100,24 +103,49 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/css/**", "/").permitAll()
-                .antMatchers("/user/**", "/user").hasRole("USER")
+                .antMatchers("/resources/**").permitAll()
+                .antMatchers("/").hasAnyRole("USER", "MANAGER", "ADMIN")
+                .antMatchers("/employee/**").hasRole("USER")
+                .antMatchers("/man/**").hasRole("MANAGER")
+                .antMatchers("/admin/**").hasRole("ADMIN")
                 .and()
-                .formLogin();
+                .formLogin()
+                .loginPage("/login").permitAll()
+                .and()
+                .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout")).logoutSuccessUrl("/login");
+
+//                .and()
+//                .logout().permitAll();
+
     }
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                .withUser("user").password("{noop}user").roles("USER")
-                .and()
-                .withUser("admin").password("{noop}admin").roles("USER", "supervisor");
-////                .and()
-////                .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout")).logoutSuccessUrl("/login");
+//        auth
+//                .inMemoryAuthentication()
+//                .withUser("user").password("{noop}user").roles("USER")
+//                .and()
+//                .withUser("admin").password("{noop}admin").roles("USER", "supervisor");
+//                .and()
+//                .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout")).logoutSuccessUrl("/login");
 
-        auth.jdbcAuthentication().dataSource(dataSource).passwordEncoder(NoOpPasswordEncoder.getInstance());
+        //basic
+//        auth.jdbcAuthentication().dataSource(dataSource).passwordEncoder(NoOpPasswordEncoder.getInstance());
+
+        //encoder
+        auth.jdbcAuthentication().dataSource(dataSource).passwordEncoder(passwordEncoder());
+
+
     }
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        return encoder;
+    }
+
 
 }
