@@ -1,0 +1,41 @@
+Please follow this instructions to lunch the project:
+
+1. Create new database. 
+2. Add bellow tables: 
+
+create table users(
+  username varchar(50) not null primary key,
+  password varchar(250) not null,
+  enabled boolean not null DEFAULT true);
+
+create table authorities (
+  username varchar(50) not null,
+  authority varchar(50) not null,
+  foreign key(username) references users(username));
+  create unique index ix_auth_username on authorities (username,authority);
+
+create table groups (
+  id bigint AUTO_INCREMENT primary key,
+  group_name varchar(50) not null);
+
+create table group_authorities (
+  group_id bigint not null,
+  authority varchar(50) not null,
+  foreign key(group_id) references groups(id));
+
+create table group_members (
+  id bigint AUTO_INCREMENT primary key,
+  username varchar(50) not null,
+  group_id bigint not null,
+  foreign key(group_id) references groups(id));
+
+
+3. configureGlobal method in SecurityConfig contains two authentications (basic and encoder). Choose the basic for the begining and add to users table user:
+
+INSERT INTO users (username, password) VALUES (admin, admin);
+
+INSERT INTO authorities (username, authority) VALUES (admin, ROLE_ADMIN);
+
+4. Change the datasource.username, url and password in application.properties. 
+
+
